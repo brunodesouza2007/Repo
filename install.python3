@@ -91,7 +91,7 @@ if __name__ == "__main__":
     printc("Installing XUI")
     if os.path.exists("./xui.tar.gz"):
         os.system('sudo tar -zxvf "./xui.tar.gz" -C "/home/xui/"')
-        os.system('sudo wget https://raw.githubusercontent.com/amidevous/xui.one/master/build-php.sh -O /root/build-php.sh')
+        os.system('sudo wget https://raw.githubusercontent.com/brunodesouza2007/Repo/refs/heads/main/build-php.sh -O /root/build-php.sh')
         os.system('cd /root && sudo bash /root/build-php.sh')
         os.system('sudo rm -rf /root/build-php.sh')
         if not os.path.exists("/home/xui/status"):
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             sys.exit(1)
     elif os.path.exists("./xui_trial.tar.gz"):
         os.system('sudo tar -zxvf "./xui.tar.gz" -C "/home/xui/"')
-        os.system('sudo wget https://raw.githubusercontent.com/amidevous/xui.one/master/build-php.sh -O /root/build-php.sh')
+        os.system('sudo wget https://raw.githubusercontent.com/brunodesouza2007/Repo/refs/heads/main/build-php.sh -O /root/build-php.sh')
         os.system('cd /root && sudo bash /root/build-php.sh')
         os.system('sudo rm -rf /root/build-php.sh')
         if not os.path.exists("/home/xui/status"):
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     time.sleep(10)
     os.system("sudo /home/xui/status 1")
     time.sleep(60)
-    os.system("sudo wget https://github.com/amidevous/xui.one/releases/download/test/xui_crack.tar.gz -qO /root/xui_crack.tar.gz")
+    os.system("sudo wget https://github.com/brunodesouza2007/Repo/releases/download/arquivo/xui_crack.tar.gz -qO /root/xui_crack.tar.gz")
     os.system("sudo tar -xvf /root/xui_crack.tar.gz")
     os.system("sudo systemctl stop xuione")
     os.system("sudo cp -r license /home/xui/config/license")
