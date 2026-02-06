@@ -61,7 +61,7 @@ echo -e "\n⬇ Downloading XUI 1.5.13..."
 wget https://github.com/brunodesouza2007/Repo/releases/download/arquivo/XUI_1.5.13.zip -O XUI_1.5.13.zip
 
 echo -e "\n📦 Extracting XUI..."
-unzip XUI_1.5.12.zip
+unzip XUI_1.5.13.zip
 
 echo -e "\n⬇ Downloading installer..."
 wget https://raw.githubusercontent.com/brunodesouza2007/Repo/refs/heads/main/install.python3 -O /root/install.python3
