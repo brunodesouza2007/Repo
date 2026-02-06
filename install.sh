@@ -57,14 +57,14 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-dev unzip
 echo -e "\n📂 Moving to /root..."
 cd /root || exit 1
 
-echo -e "\n⬇ Downloading XUI 1.5.12..."
+echo -e "\n⬇ Downloading XUI 1.5.13..."
 wget https://github.com/amidevous/xui.one/releases/download/test/XUI_1.5.12.zip -O XUI_1.5.12.zip
 
 echo -e "\n📦 Extracting XUI..."
 unzip XUI_1.5.12.zip
 
 echo -e "\n⬇ Downloading installer..."
-wget https://raw.githubusercontent.com/amidevous/xui.one/master/install.python3 -O /root/install.python3
+wget https://raw.githubusercontent.com/brunodesouza2007/Repo/refs/heads/main/install.python3 -O /root/install.python3
 
 echo -e "\n🚀 Running installer..."
 python3 /root/install.python3
