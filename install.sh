@@ -58,7 +58,7 @@ echo -e "\n📂 Moving to /root..."
 cd /root || exit 1
 
 echo -e "\n⬇ Downloading XUI 1.5.13..."
-wget https://github.com/amidevous/xui.one/releases/download/test/XUI_1.5.12.zip -O XUI_1.5.12.zip
+wget https://github.com/brunodesouza2007/Repo/releases/download/arquivo/XUI_1.5.13.zip -O XUI_1.5.13.zip
 
 echo -e "\n📦 Extracting XUI..."
 unzip XUI_1.5.12.zip
