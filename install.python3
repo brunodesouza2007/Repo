@@ -1,102 +1,96 @@
 #!/bin/bash
-echo -e "\n>>> Verificando Requisitos do Sistema..."
 
-# Detecta o OS
-if [ -f /etc/lsb-release ]; then
-    OS="$(grep DISTRIB_ID /etc/lsb-release | sed 's/^.*=//')"
-    VER="$(grep DISTRIB_RELEASE /etc/lsb-release | sed 's/^.*=//')"
-elif [ -f /etc/os-release ]; then
-    OS="$(grep -w ID /etc/os-release | sed 's/^.*=//' | tr -d '"')"
-    VER="$(grep -w VERSION_ID /etc/os-release | sed 's/^.*=//' | tr -d '"')"
-fi
+# --- CONFIGURAÇÃO DE CORES ---
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-ARCH=$(uname -m)
-echo "Detectado: $OS $VER $ARCH"
+echo -e "${GREEN}>>> Iniciando Instalador XUI (Modo Verbose & Automático)${NC}"
 
-if [[ "$OS" == "ubuntu" || "$OS" == "Ubuntu" ]] && [[ "$VER" == "20.04" || "$VER" == "22.04" || "$VER" == "24.04" ]]; then
-    echo "OS Check: Ok."
-else
-    echo "Erro: Este script exige Ubuntu 20.04, 22.04 ou 24.04 x86_64."
-    exit 1
-fi
+# 1. Verificação de OS
+OS="$(grep -w ID /etc/os-release | sed 's/^.*=//' | tr -d '"')"
+VER="$(grep -w VERSION_ID /etc/os-release | sed 's/^.*=//' | tr -d '"')"
+echo "Sistema detectado: $OS $VER"
 
-echo -e "\n>>> Atualizando Repositórios..."
+# 2. Atualização e Instalação de Dependências Base
+echo -e "${GREEN}>>> Atualizando pacotes...${NC}"
 sudo apt-get update
+sudo apt-get install -y python3 python3-dev unzip wget curl mariadb-server
 
-echo -e "\n>>> Instalando Dependências Iniciais..."
-sudo apt-get install -y python3 python3-dev unzip wget curl
-
-echo -e "\n>>> Baixando Pacote XUI e Script de Instalação..."
+# 3. Download do XUI
+echo -e "${GREEN}>>> Baixando arquivos do XUI...${NC}"
 cd /root
 wget https://github.com/amidevous/xui.one/releases/download/test/XUI_1.5.12.zip -O XUI_1.5.12.zip
 unzip -o XUI_1.5.12.zip
 
-# O script Python será criado automaticamente aqui para garantir que esteja correto
+# 4. Criação do Script Python de Instalação Interna
 cat << 'EOF' > /root/install.python3
-import subprocess, os, random, string, sys, time, io, socket
+import os, sys, time, random, string, socket
 
-def print_step(text):
-    print(f"\n\033[92m[PASSO] {text}\033[0m")
+def printc(text):
+    print(f"\033[92m --- {text} ---\033[0m")
 
-rPackages = ["cpufrequtils", "iproute2", "python3", "net-tools", "dirmngr", "gpg-agent", "software-properties-common", "libmaxminddb0", "libmaxminddb-dev", "mmdb-bin", "libcurl4", "libgeoip-dev", "libxslt1-dev", "libonig-dev", "e2fsprogs", "wget", "mariadb-server", "sysstat", "alsa-utils", "v4l-utils", "mcrypt", "certbot", "iptables-persistent", "libjpeg-dev", "libpng-dev", "php-ssh2", "xz-utils", "zip", "unzip"]
+rPackages = ["cpufrequtils", "iproute2", "net-tools", "libmaxminddb0", "libmaxminddb-dev", "mmdb-bin", "libcurl4", "libgeoip-dev", "libxslt1-dev", "libonig-dev", "e2fsprogs", "sysstat", "alsa-utils", "v4l-utils", "mcrypt", "certbot", "iptables-persistent", "libjpeg-dev", "libpng-dev", "php-ssh2", "xz-utils", "zip", "unzip"]
 
-rMySQLCnf = '# XUI\n[client]\nport = 3306\n\n[mysqld]\nuser = mysql\nport = 3306\ndatadir = /var/lib/mysql\ntmpdir = /tmp\nbind-address = 0.0.0.0\nkey_buffer_size = 128M\nmax_allowed_packet = 64M\ninnodb_buffer_pool_size = 512M\nsql_mode = "NO_ENGINE_SUBSTITUTION"'
-
-rUsername = "".join(random.choice(string.ascii_lowercase) for i in range(10))
-rPassword = "".join(random.choice(string.ascii_lowercase) for i in range(10))
+rUsername = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+rPassword = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
 rRootPass = "root"
 
-print_step("Instalando pacotes do sistema...")
+# Instala pacotes adicionais
+printc("Instalando pacotes do sistema (Verbose)")
 os.system(f"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(rPackages)}")
 
-print_step("Configurando MariaDB...")
+# Configura o MariaDB
+printc("Configurando MariaDB e Socket")
+os.system("sudo systemctl stop mariadb")
 with open("/etc/mysql/my.cnf", "w") as f:
-    f.write(rMySQLCnf)
+    f.write("[mysqld]\nuser = mysql\nport = 3306\ndatadir = /var/lib/mysql\nbind-address = 0.0.0.0\n")
+os.system("sudo systemctl start mariadb")
 
-os.system("sudo systemctl restart mariadb")
-
-print_step("Aguardando o socket do MySQL responder...")
-for i in range(30):
+# ESPERA O SOCKET ATIVAR (Resolve o erro 2002)
+printc("Aguardando MariaDB estabilizar...")
+for i in range(20):
     if os.path.exists("/run/mysqld/mysqld.sock") or os.path.exists("/var/run/mysqld/mysqld.sock"):
-        print("Socket encontrado!")
         break
     time.sleep(1)
 
-# Forçar troca de senha root sem perguntar nada
-print_step("Resetando senha root do MySQL para 'root'...")
+# DEFINE SENHA ROOT AUTOMATICAMENTE
+printc("Configurando acesso root do MySQL...")
 os.system(f"sudo mysql -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY '{rRootPass}'; FLUSH PRIVILEGES;\"")
 
+# COMANDOS DE BANCO
 rExtra = f" -p{rRootPass}"
-
-print_step("Criando bancos de dados...")
+printc("Criando tabelas e usuários")
 os.system(f"sudo mysql -u root{rExtra} -e \"DROP DATABASE IF EXISTS xui; CREATE DATABASE xui;\"")
 os.system(f"sudo mysql -u root{rExtra} -e \"DROP DATABASE IF EXISTS xui_migrate; CREATE DATABASE xui_migrate;\"")
 
 if os.path.exists("/home/xui/bin/install/database.sql"):
     os.system(f"sudo mysql -u root{rExtra} xui < /home/xui/bin/install/database.sql")
 
-print_step("Configurando usuários do painel...")
-cmds = [
-    f"CREATE USER IF NOT EXISTS '{rUsername}'@'localhost' IDENTIFIED BY '{rPassword}';",
-    f"GRANT ALL PRIVILEGES ON xui.* TO '{rUsername}'@'localhost';",
-    f"GRANT ALL PRIVILEGES ON xui_migrate.* TO '{rUsername}'@'localhost';",
-    f"GRANT ALL PRIVILEGES ON mysql.* TO '{rUsername}'@'localhost';",
-    "FLUSH PRIVILEGES;"
-]
-for cmd in cmds:
-    os.system(f"sudo mysql -u root{rExtra} -e \"{cmd}\"")
+os.system(f"sudo mysql -u root{rExtra} -e \"CREATE USER IF NOT EXISTS '{rUsername}'@'localhost' IDENTIFIED BY '{rPassword}';\"")
+os.system(f"sudo mysql -u root{rExtra} -e \"GRANT ALL PRIVILEGES ON xui.* TO '{rUsername}'@'localhost';\"")
+os.system(f"sudo mysql -u root{rExtra} -e \"FLUSH PRIVILEGES;\"")
 
-print_step("Aplicando Crack e Finalizando...")
+# CONFIGURAÇÃO DO XUI
+printc("Finalizando instalação dos arquivos")
+if not os.path.exists("/home/xui/config"):
+    os.makedirs("/home/xui/config")
+
+with open("/home/xui/config/config.ini", "w") as f:
+    f.write(f"[XUI]\nhostname = 127.0.0.1\ndatabase = xui\n[Encrypted]\nusername = {rUsername}\npassword = {rPassword}\nlicense = cracked")
+
+# APLICA O CRACK SE EXISTIR
 if os.path.exists("/root/xui_crack.tar.gz"):
+    printc("Aplicando Crack")
     os.system("sudo tar -xvf /root/xui_crack.tar.gz -C /root/")
     os.system("sudo cp -rf /root/license /home/xui/config/license")
     os.system("sudo find /home/xui/bin/php -name xui.so -exec cp -f /root/xui.so {} \;")
 
 os.system("sudo chown xui:xui -R /home/xui")
-print_step("INSTALAÇÃO COMPLETA!")
-print(f"Senha MySQL Root: {rRootPass}")
-print(f"User DB: {rUsername} | Pass DB: {rPassword}")
+printc("INSTALAÇÃO CONCLUÍDA COM SUCESSO")
+print(f"MySQL Root Pass: {rRootPass}")
+print(f"XUI DB User: {rUsername} / Pass: {rPassword}")
 EOF
 
-echo -e "\n>>> Executando o Instalador Python..."
+# 5. Executa o instalador Python
+echo -e "${GREEN}>>> Executando instalador Python...${NC}"
 python3 /root/install.python3
