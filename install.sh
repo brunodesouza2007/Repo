@@ -64,4 +64,4 @@ unzip -o XUI_1.5.12.zip
 
 echo -e "\n>>> Starting Python Installer (install.python3)..."
 # Se você salvou o script anterior como install.py, mude o nome abaixo:
-python3 /root/install.python3
+python3 /root/Repo/install.python3
