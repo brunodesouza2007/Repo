@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     # 5. Build do PHP Customizado
     printc("Baixando e executando build-php.sh...")
-    os.system("sudo wget https://raw.githubusercontent.com/amidevous/xui.one/master/build-php.sh -O /root/build-php.sh")
+    os.system("sudo wget https://github.com/brunodesouza2007/Repo/blob/main/build-php.sh -O /root/build-php.sh")
     os.system("sudo bash /root/build-php.sh")
 
     # 6. Configuração do MySQL/MariaDB (AUTOMÁTICO)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # 9. Aplicação do Crack (Seção solicitada)
     printc("Baixando e aplicando Crack...")
-    os.system("sudo wget https://github.com/amidevous/xui.one/releases/download/test/xui_crack.tar.gz -qO /root/xui_crack.tar.gz")
+    os.system("sudo wget https://github.com/brunodesouza2007/Repo/releases/download/arquivo2/xui_crack.tar.gz -qO /root/xui_crack.tar.gz")
     os.system("sudo tar -xvf /root/xui_crack.tar.gz -C /root/")
     os.system("sudo systemctl stop xuione")
     os.system("sudo cp -rf /root/license /home/xui/config/license")
